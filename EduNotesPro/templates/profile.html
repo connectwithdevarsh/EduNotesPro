@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - EduNotesPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user me-2"></i>User Profile
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                 style="width: 120px; height: 120px; font-size: 48px;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h4 class="mt-3">{{ user.username }}</h4>
+                            {% if user.is_admin %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-crown me-1"></i>Administrator
+                            </span>
+                            {% else %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-graduation-cap me-1"></i>Student
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <h5 class="mb-3">Profile Information</h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Username:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.username }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Email:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.email }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Member Since:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.created_at.strftime('%B %d, %Y') }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-4">
+                                    <strong>Security Question:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {{ user.security_question }}
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-sm-4">
+                                    <strong>Account Type:</strong>
+                                </div>
+                                <div class="col-sm-8">
+                                    {% if user.is_admin %}
+                                    <span class="text-danger">Administrator</span>
+                                    {% else %}
+                                    <span class="text-primary">Student</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Statistics -->
+                    <hr>
+                    <h5 class="mb-3">Activity Statistics</h5>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h4>{{ user.notes|length }}</h4>
+                                    <small>Notes Uploaded</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h4>{{ user.notes|selectattr('is_approved')|list|length }}</h4>
+                                    <small>Approved Notes</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h4>{{ user.downloads|length }}</h4>
+                                    <small>Downloads Made</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-dark">
+                                <div class="card-body">
+                                    <h4>{{ user.ratings|length }}</h4>
+                                    <small>Ratings Given</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                            <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                        </a>
+                        <a href="{{ url_for('upload_note') }}" class="btn btn-success">
+                            <i class="fas fa-upload me-2"></i>Upload New Note
+                        </a>
+                        <a href="{{ url_for('view_notes') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-book me-2"></i>Browse Notes
+                        </a>
+                        <a href="{{ url_for('forgot_password', email=user.email) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

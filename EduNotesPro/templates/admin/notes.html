@@ -1,0 +1,179 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Note Management{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="filter-card">
+    <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filter Notes</h5>
+    <form method="GET" class="row g-3">
+        <div class="col-md-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Notes</option>
+                <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending Approval</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="subject" class="form-label">Subject</label>
+            <select name="subject" class="form-select" onchange="this.form.submit()">
+                <option value="">All Subjects</option>
+                {% for subject in subjects %}
+                <option value="{{ subject.id }}" {% if current_subject|string == subject.id|string %}selected{% endif %}>
+                    {{ subject.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="search" class="form-label">Search</label>
+            <input type="text" name="search" class="form-control" placeholder="Search by title or description..." 
+                   value="{{ current_search }}" onchange="this.form.submit()">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <a href="{{ url_for('admin_notes') }}" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Notes Table -->
+<div class="admin-table">
+    <h5 class="table-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-file-alt me-2"></i>Notes ({{ notes|length }})</span>
+        <div>
+            {% if notes %}
+            <span class="badge bg-light text-dark me-2">
+                Approved: {{ notes|selectattr('is_approved')|list|length }}
+            </span>
+            <span class="badge bg-light text-dark">
+                Pending: {{ notes|rejectattr('is_approved')|list|length }}
+            </span>
+            {% endif %}
+        </div>
+    </h5>
+    
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Note Info</th>
+                    <th>Author</th>
+                    <th>Subject</th>
+                    <th>Status</th>
+                    <th>Downloads</th>
+                    <th>Upload Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in notes %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="file-icon me-3">
+                                <i class="fas fa-file-pdf text-danger"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ note.title[:40] }}{% if note.title|length > 40 %}...{% endif %}</div>
+                                <small class="text-muted">
+                                    {% if note.description %}
+                                        {{ note.description[:50] }}{% if note.description|length > 50 %}...{% endif %}
+                                    {% else %}
+                                        No description
+                                    {% endif %}
+                                </small>
+                                <div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-file me-1"></i>{{ note.original_filename }}
+                                        {% if note.file_size %}
+                                        | {{ "%.1f"|format(note.file_size / 1024 / 1024) }} MB
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-bold">{{ note.author.username if note.author else 'Unknown' }}</div>
+                        <small class="text-muted">{{ note.author.email if note.author else 'No email' }}</small>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">{{ note.subject.name if note.subject else 'No Subject' }}</span>
+                        <div><small class="text-muted">Semester {{ note.semester }}</small></div>
+                    </td>
+                    <td>
+                        {% if note.is_approved %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Approved
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i>Pending
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="text-center">
+                            <div class="fw-bold text-primary">{{ note.download_count }}</div>
+                            <small class="text-muted">downloads</small>
+                        </div>
+                    </td>
+                    <td>
+                        <div>{{ note.upload_date.strftime('%Y-%m-%d') if note.upload_date else 'Unknown' }}</div>
+                        <small class="text-muted">{{ note.upload_date.strftime('%H:%M') if note.upload_date else '' }}</small>
+                    </td>
+                    <td>
+                        <div class="btn-group-vertical" role="group">
+                            {% if not note.is_approved %}
+                                <a href="{{ url_for('approve_note', note_id=note.id) }}" 
+                                   class="btn btn-success btn-sm mb-1" title="Approve Note">
+                                    <i class="fas fa-check me-1"></i>Approve
+                                </a>
+                            {% endif %}
+                            {% if note.is_approved %}
+                                <a href="{{ url_for('note_detail', note_id=note.id) }}" 
+                                   class="btn btn-info btn-sm mb-1" title="View Note" target="_blank">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('delete_note', note_id=note.id) }}" 
+                               class="btn btn-danger btn-sm" title="Delete Note"
+                               data-confirm="Are you sure you want to delete '{{ note.title }}'? This cannot be undone.">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-5">
+                        <i class="fas fa-file-alt fa-3x mb-3 text-muted"></i>
+                        <div>No notes found</div>
+                        {% if current_search or current_status or current_subject %}
+                        <small>Try adjusting your filters</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.file-icon {
+    width: 40px;
+    height: 40px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+</style>
+{% endblock %}

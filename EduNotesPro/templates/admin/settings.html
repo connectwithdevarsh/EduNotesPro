@@ -1,0 +1,265 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Admin Settings{% endblock %}
+
+{% block content %}
+<!-- Account Settings -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="admin-table">
+            <h5 class="table-header">
+                <i class="fas fa-user-cog me-2"></i>Account Settings
+            </h5>
+            <div class="p-4">
+                <!-- Change Password -->
+                <form method="POST" class="needs-validation" novalidate>
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                        <div class="invalid-feedback">
+                            Please enter your current password.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" 
+                               minlength="6" required>
+                        <div class="form-text">Password must be at least 6 characters long.</div>
+                        <div class="invalid-feedback">
+                            Please enter a new password (minimum 6 characters).
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" 
+                               minlength="6" required>
+                        <div class="invalid-feedback">
+                            Please confirm your new password.
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- System Information -->
+        <div class="admin-table mb-4">
+            <h5 class="table-header">
+                <i class="fas fa-info-circle me-2"></i>System Information
+            </h5>
+            <div class="p-3">
+                <div class="mb-3">
+                    <strong>Platform:</strong>
+                    <div class="text-muted">EduNotesPro v1.0</div>
+                </div>
+                <div class="mb-3">
+                    <strong>Last Login:</strong>
+                    <div class="text-muted">{{ moment().format('YYYY-MM-DD HH:mm') }}</div>
+                </div>
+                <div class="mb-3">
+                    <strong>Admin Role:</strong>
+                    <div><span class="badge bg-danger">Administrator</span></div>
+                </div>
+                <div class="mb-3">
+                    <strong>Database:</strong>
+                    <div class="text-muted">SQLite/PostgreSQL</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="admin-table">
+            <h5 class="table-header">
+                <i class="fas fa-bolt me-2"></i>Quick Actions
+            </h5>
+            <div class="p-3">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_notes', status='pending') }}" class="btn btn-warning">
+                        <i class="fas fa-clock me-2"></i>Review Pending Notes
+                    </a>
+                    <a href="{{ url_for('admin_users', status='active') }}" class="btn btn-info">
+                        <i class="fas fa-users me-2"></i>Manage Users
+                    </a>
+                    <a href="{{ url_for('admin_analytics') }}" class="btn btn-success">
+                        <i class="fas fa-chart-bar me-2"></i>View Analytics
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Site
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Statistics -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="admin-table">
+            <h5 class="table-header">
+                <i class="fas fa-chart-bar me-2"></i>System Statistics
+            </h5>
+            <div class="p-4">
+                <div class="row text-center">
+                    <div class="col-md-2">
+                        <div class="stat-item">
+                            <div class="stat-number text-primary">{{ moment().format('YYYY') }}</div>
+                            <div class="stat-label">Current Year</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="stat-item">
+                            <div class="stat-number text-success">Active</div>
+                            <div class="stat-label">System Status</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="stat-item">
+                            <div class="stat-number text-info">Flask</div>
+                            <div class="stat-label">Framework</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="stat-item">
+                            <div class="stat-number text-warning">Bootstrap</div>
+                            <div class="stat-label">UI Framework</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="stat-item">
+                            <div class="stat-number text-purple">SQLAlchemy</div>
+                            <div class="stat-label">Database ORM</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="stat-item">
+                            <div class="stat-number text-dark">UTF-8</div>
+                            <div class="stat-label">Encoding</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Guidelines -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="admin-table">
+            <h5 class="table-header">
+                <i class="fas fa-shield-alt me-2"></i>Security Guidelines
+            </h5>
+            <div class="p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-check-circle text-success me-2"></i>Best Practices</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Change admin password regularly</li>
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Review user activities periodically</li>
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Monitor note approval queue</li>
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Check feedback and ratings</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>Security Warnings</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Never share admin credentials</li>
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Logout when not using admin panel</li>
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Review suspicious user activity</li>
+                            <li class="mb-2"><i class="fas fa-chevron-right text-muted me-2"></i>Backup database regularly</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-item {
+    padding: 1rem 0;
+}
+
+.stat-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Form validation
+(function() {
+    'use strict';
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            // Custom password confirmation validation
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (newPassword !== confirmPassword) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                const confirmField = document.getElementById('confirm_password');
+                confirmField.setCustomValidity('Passwords do not match');
+                confirmField.classList.add('is-invalid');
+                
+                // Show custom error message
+                const feedback = confirmField.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = 'Passwords do not match';
+                }
+            } else {
+                document.getElementById('confirm_password').setCustomValidity('');
+            }
+            
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+    
+    // Real-time password confirmation check
+    document.getElementById('confirm_password').addEventListener('input', function() {
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = this.value;
+        
+        if (newPassword !== confirmPassword) {
+            this.setCustomValidity('Passwords do not match');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+})();
+</script>
+{% endblock %}

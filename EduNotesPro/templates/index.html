@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" data-aos="fade-down">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 hero-content">
+                <h1 class="hero-title" data-aos="fade-right" data-aos-delay="200">
+                    Welcome to <span class="text-gradient">EduNotesPro</span>
+                </h1>
+                <p class="hero-subtitle" data-aos="fade-right" data-aos-delay="400">
+                    The smartest way to share & find notes. Join thousands of students building the future together!
+                </p>
+                <div class="d-flex gap-3 flex-wrap mb-4" data-aos="fade-up" data-aos-delay="600">
+                    {% if not session.user_id %}
+                    <a href="{{ url_for('signup') }}" class="hero-cta btn-hover-effect">
+                        <i class="fas fa-rocket me-2"></i>Start Sharing Now
+                    </a>
+                    <a href="{{ url_for('view_notes') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-book me-2"></i>Browse Notes
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('upload_note') }}" class="hero-cta btn-hover-effect">
+                        <i class="fas fa-upload me-2"></i>Upload Your Notes
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-tachometer-alt me-2"></i>My Dashboard
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Trust Badges -->
+                <div class="d-flex flex-wrap gap-2" data-aos="fade-up" data-aos-delay="800">
+                    <span class="trust-badge">
+                        <i class="fas fa-shield-alt"></i> Secure & Safe
+                    </span>
+                    <span class="trust-badge">
+                        <i class="fas fa-users"></i> {{ total_users }}+ Students
+                    </span>
+                    <span class="trust-badge">
+                        <i class="fas fa-star"></i> Highly Rated
+                    </span>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center" data-aos="zoom-in" data-aos-delay="300">
+                <div class="hero-illustration">
+                    <div class="feature-icon mb-4" style="width: 200px; height: 200px; font-size: 5rem; margin: 0 auto;">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enhanced Statistics Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold text-primary mb-3" data-aos="fade-up">
+                    <i class="fas fa-chart-line me-2"></i>Platform Statistics
+                </h2>
+                <div class="section-divider"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="stats-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stats-number">{{ total_notes }}</div>
+                    <div class="stats-label">Quality Notes</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="stats-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-number">{{ total_users }}</div>
+                    <div class="stats-label">Active Students</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="stats-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="stats-number">{{ total_downloads }}</div>
+                    <div class="stats-label">Happy Downloads</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Top 5 Notes of the Week -->
+{% if latest_notes %}
+<section class="py-5">
+    <div class="container">
+        <div class="top-notes-section" data-aos="fade-up">
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h2 class="top-notes-title">
+                        <i class="fas fa-fire"></i>
+                        Top 5 Notes of the Week
+                        <span class="trending-badge">Trending</span>
+                    </h2>
+                </div>
+            </div>
+            <div class="row">
+                {% for note in latest_notes[:5] %}
+                <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
+                    <div class="note-card {% if note.average_rating() >= 4.5 %}verified-note{% endif %}">
+                        <div class="card-body">
+                            <h5 class="note-title">{{ note.title }}</h5>
+                            <div class="note-meta">
+                                <span class="badge badge-primary me-2">{{ note.subject.name if note.subject else 'General' }}</span>
+                                <span class="badge badge-warning">Sem {{ note.semester }}</span>
+                                <span class="user-level">{{ note.user.username if note.user else 'Anonymous' }}</span>
+                            </div>
+                            <p class="text-muted small mb-3">{{ note.description[:100] }}...</p>
+                            <div class="note-stats">
+                                <div class="rating-stars">
+                                    {% for i in range(1, 6) %}
+                                        <i class="fas fa-star{% if i > note.average_rating() %} text-muted{% endif %}"></i>
+                                    {% endfor %}
+                                    <span class="ms-1">({{ "%.1f"|format(note.average_rating()) }})</span>
+                                </div>
+                                <div class="download-count">
+                                    <i class="fas fa-download me-1"></i>{{ note.download_count }}
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ url_for('note_detail', note_id=note.id) }}" class="btn btn-primary btn-sm w-100">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold text-primary mb-3" data-aos="fade-up">
+                    Why Students Choose EduNotesPro?
+                </h2>
+                <div class="section-divider"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h5 class="fw-bold">Smart Search</h5>
+                        <p class="text-muted">Find exactly what you need with our intelligent search system</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h5 class="fw-bold">Quality Control</h5>
+                        <p class="text-muted">All notes are reviewed to ensure high quality content</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h5 class="fw-bold">Mobile Ready</h5>
+                        <p class="text-muted">Access your notes anywhere, anytime from any device</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h5 class="fw-bold">Community</h5>
+                        <p class="text-muted">Built by students, for students with love and care</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center" data-aos="zoom-in">
+                <div class="card border-0 shadow-lg p-5" style="background: var(--gradient-primary);">
+                    <div class="card-body text-white">
+                        <h2 class="fw-bold mb-4">Ready to Start Your Journey?</h2>
+                        <p class="lead mb-4">Join thousands of students who are already sharing knowledge and building their future together!</p>
+                        {% if not session.user_id %}
+                        <div class="d-flex gap-3 justify-content-center flex-wrap">
+                            <a href="{{ url_for('signup') }}" class="btn btn-warning btn-lg btn-hover-effect">
+                                <i class="fas fa-user-plus me-2"></i>Sign Up Now - It's Free!
+                            </a>
+                            <a href="{{ url_for('view_notes') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-eye me-2"></i>Browse Notes First
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="d-flex gap-3 justify-content-center flex-wrap">
+                            <a href="{{ url_for('upload_note') }}" class="btn btn-warning btn-lg btn-hover-effect">
+                                <i class="fas fa-upload me-2"></i>Share Your First Note
+                            </a>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search Bar Section -->
+<section class="py-4 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 mx-auto" data-aos="fade-up">
+                <div class="search-bar">
+                    <form action="{{ url_for('view_notes') }}" method="GET" class="position-relative">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search by subject or title..." 
+                               autocomplete="off">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

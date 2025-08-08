@@ -1,0 +1,142 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="filter-card">
+    <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filter Users</h5>
+    <form method="GET" class="row g-3">
+        <div class="col-md-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="blocked" {% if current_status == 'blocked' %}selected{% endif %}>Blocked</option>
+                <option value="admin" {% if current_status == 'admin' %}selected{% endif %}>Admins</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="search" class="form-label">Search</label>
+            <input type="text" name="search" class="form-control" placeholder="Search by username or email..." 
+                   value="{{ current_search }}" onchange="this.form.submit()">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">&nbsp;</label>
+            <div class="d-grid">
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-secondary">Clear Filters</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Users Table -->
+<div class="admin-table">
+    <h5 class="table-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-users me-2"></i>Users ({{ users|length }})</span>
+        <span class="badge bg-light text-dark">Total: {{ users|length }}</span>
+    </h5>
+    
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>User Info</th>
+                    <th>Status</th>
+                    <th>Notes Count</th>
+                    <th>Joined Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle me-3">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ user.username }}</div>
+                                <small class="text-muted">{{ user.email }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if user.is_admin %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-shield-alt me-1"></i>Admin
+                            </span>
+                        {% elif user.is_blocked %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-ban me-1"></i>Blocked
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Active
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-info">{{ user.notes|length }}</span>
+                    </td>
+                    <td>
+                        <div>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'Unknown' }}</div>
+                        <small class="text-muted">{{ user.created_at.strftime('%H:%M') if user.created_at else '' }}</small>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            {% if not user.is_admin %}
+                                {% if user.is_blocked %}
+                                    <a href="{{ url_for('unblock_user', user_id=user.id) }}" 
+                                       class="btn btn-success btn-sm" title="Unblock User">
+                                        <i class="fas fa-unlock"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('block_user', user_id=user.id) }}" 
+                                       class="btn btn-warning btn-sm" title="Block User"
+                                       data-confirm="Are you sure you want to block {{ user.username }}?">
+                                        <i class="fas fa-ban"></i>
+                                    </a>
+                                {% endif %}
+                                <a href="{{ url_for('delete_user', user_id=user.id) }}" 
+                                   class="btn btn-danger btn-sm" title="Delete User"
+                                   data-confirm="Are you sure you want to permanently delete {{ user.username }}? This cannot be undone.">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            {% else %}
+                                <span class="badge bg-secondary">Protected</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <i class="fas fa-users fa-3x mb-3 text-muted"></i>
+                        <div>No users found</div>
+                        {% if current_search or current_status %}
+                        <small>Try adjusting your filters</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #2E8BC0, #1a5f85);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

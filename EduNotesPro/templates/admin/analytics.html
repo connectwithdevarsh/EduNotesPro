@@ -1,0 +1,337 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Analytics{% endblock %}
+
+{% block content %}
+<!-- Analytics Overview -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                <i class="fas fa-download"></i>
+            </div>
+            <div class="stats-number">{{ downloads_by_date|map(attribute='count')|sum or 0 }}</div>
+            <div class="stats-label">Total Downloads</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <div class="stats-number">{{ top_notes|length }}</div>
+            <div class="stats-label">Popular Notes</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                <i class="fas fa-eye-slash"></i>
+            </div>
+            <div class="stats-number">{{ zero_downloads|length }}</div>
+            <div class="stats-label">Zero Downloads</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                <i class="fas fa-books"></i>
+            </div>
+            <div class="stats-number">{{ notes_by_subject|length }}</div>
+            <div class="stats-label">Active Subjects</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Downloads Over Time -->
+    <div class="col-lg-8">
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-chart-line me-2"></i>Downloads Over Time</h5>
+            <canvas id="downloadsChart" height="120"></canvas>
+        </div>
+    </div>
+    
+    <!-- Notes by Subject -->
+    <div class="col-lg-4">
+        <div class="chart-container">
+            <h5 class="mb-3"><i class="fas fa-chart-pie me-2"></i>Notes by Subject</h5>
+            <canvas id="subjectsChart" height="240"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Top Downloaded Notes -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="admin-table">
+            <h5 class="table-header">
+                <i class="fas fa-trophy me-2"></i>Top Downloaded Notes
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Note</th>
+                            <th>Author</th>
+                            <th>Subject</th>
+                            <th>Downloads</th>
+                            <th>Average Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in top_notes %}
+                        <tr>
+                            <td>
+                                <div class="rank-badge">
+                                    {% if loop.index <= 3 %}
+                                        <i class="fas fa-medal text-{% if loop.index == 1 %}warning{% elif loop.index == 2 %}secondary{% else %}warning{% endif %}"></i>
+                                    {% endif %}
+                                    #{{ loop.index }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="file-icon me-3">
+                                        <i class="fas fa-file-pdf text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ note.title[:40] }}{% if note.title|length > 40 %}...{% endif %}</div>
+                                        <small class="text-muted">{{ note.original_filename }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ note.author.username if note.author else 'Unknown' }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ note.subject.name if note.subject else 'No Subject' }}</span>
+                            </td>
+                            <td>
+                                <div class="text-center">
+                                    <div class="fw-bold text-primary fs-5">{{ note.download_count }}</div>
+                                    <small class="text-muted">downloads</small>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="rating-display">
+                                    {% set avg_rating = note.average_rating() %}
+                                    {% for i in range(1, 6) %}
+                                        <i class="fas fa-star {% if i <= avg_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                    {% endfor %}
+                                    <div><small class="text-muted">{{ "%.1f"|format(avg_rating) }}/5</small></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-chart-bar fa-3x mb-3 text-muted"></i>
+                                <div>No download data available</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Zero Downloads Notes -->
+{% if zero_downloads %}
+<div class="row">
+    <div class="col-12">
+        <div class="admin-table">
+            <h5 class="table-header">
+                <i class="fas fa-exclamation-triangle me-2"></i>Notes with Zero Downloads ({{ zero_downloads|length }})
+            </h5>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Note</th>
+                            <th>Author</th>
+                            <th>Subject</th>
+                            <th>Upload Date</th>
+                            <th>Days Since Upload</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in zero_downloads[:10] %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="file-icon me-3">
+                                        <i class="fas fa-file-pdf text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ note.title[:40] }}{% if note.title|length > 40 %}...{% endif %}</div>
+                                        <small class="text-muted">{{ note.original_filename }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ note.author.username if note.author else 'Unknown' }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ note.subject.name if note.subject else 'No Subject' }}</span>
+                            </td>
+                            <td>{{ note.upload_date.strftime('%Y-%m-%d') if note.upload_date else 'Unknown' }}</td>
+                            <td>
+                                {% if note.upload_date %}
+                                    {% set days_since = (moment().date() - note.upload_date.date()).days %}
+                                    <span class="badge {% if days_since > 30 %}bg-danger{% elif days_since > 7 %}bg-warning{% else %}bg-secondary{% endif %}">
+                                        {{ (moment().date() - note.upload_date.date()).days }} days
+                                    </span>
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('note_detail', note_id=note.id) }}" 
+                                       class="btn btn-info btn-sm" title="View Note" target="_blank">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_note', note_id=note.id) }}" 
+                                       class="btn btn-danger btn-sm" title="Delete Note"
+                                       data-confirm="Delete this unused note?">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if zero_downloads|length > 10 %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3">
+                                <em class="text-muted">Showing first 10 of {{ zero_downloads|length }} notes with zero downloads</em>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.file-icon {
+    width: 40px;
+    height: 40px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.rank-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: bold;
+}
+
+.rating-display {
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Downloads Over Time Chart
+const downloadsCtx = document.getElementById('downloadsChart').getContext('2d');
+
+const downloadDates = [
+    {% for item in downloads_by_date %}
+    '{{ item.date }}',
+    {% endfor %}
+];
+
+const downloadCounts = [
+    {% for item in downloads_by_date %}
+    {{ item.count }},
+    {% endfor %}
+];
+
+new Chart(downloadsCtx, {
+    type: 'line',
+    data: {
+        labels: downloadDates,
+        datasets: [{
+            label: 'Downloads',
+            data: downloadCounts,
+            borderColor: '#2E8BC0',
+            backgroundColor: 'rgba(46, 139, 192, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        }
+    }
+});
+
+// Notes by Subject Chart
+const subjectsCtx = document.getElementById('subjectsChart').getContext('2d');
+
+const subjectNames = [
+    {% for item in notes_by_subject %}
+    '{{ item[0] }}',
+    {% endfor %}
+];
+
+const subjectCounts = [
+    {% for item in notes_by_subject %}
+    {{ item[1] }},
+    {% endfor %}
+];
+
+const colors = [
+    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+    '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+];
+
+new Chart(subjectsCtx, {
+    type: 'doughnut',
+    data: {
+        labels: subjectNames,
+        datasets: [{
+            data: subjectCounts,
+            backgroundColor: colors.slice(0, subjectNames.length),
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

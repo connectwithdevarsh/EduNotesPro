@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Note - EduNotesPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>Upload New Note
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="title" class="form-label">Note Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" required
+                                       placeholder="e.g., Calculus Chapter 1 - Limits and Derivatives">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="semester" class="form-label">Semester *</label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject_id" class="form-label">Subject *</label>
+                            <select class="form-select" id="subject_id" name="subject_id" required>
+                                <option value="">Select Subject</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"
+                                      placeholder="Briefly describe the contents of your note (topics covered, important formulas, etc.)"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="file" class="form-label">Upload File *</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Supported formats: PDF, DOC, DOCX (Max size: 16MB)
+                            </div>
+                        </div>
+
+                        <!-- File Preview -->
+                        <div id="filePreview" class="mb-4" style="display: none;">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="fas fa-file me-2"></i>Selected File
+                                    </h6>
+                                    <div id="fileInfo" class="d-flex align-items-center">
+                                        <span id="fileName" class="me-3"></span>
+                                        <span id="fileSize" class="badge bg-secondary"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Important Notice -->
+                        <div class="alert alert-info">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong>Note:</strong> Your uploaded note will be reviewed by our admin team before being made available to other students. You'll be notified once it's approved.
+                        </div>
+
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-upload me-2"></i>Upload Note
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    
+    if (file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        preview.style.display = 'block';
+        
+        // Validate file size (16MB = 16 * 1024 * 1024 bytes)
+        if (file.size > 16 * 1024 * 1024) {
+            alert('File size exceeds 16MB limit. Please choose a smaller file.');
+            e.target.value = '';
+            preview.style.display = 'none';
+        }
+    } else {
+        preview.style.display = 'none';
+    }
+});
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Form validation
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const file = document.getElementById('file').files[0];
+    if (!file) {
+        e.preventDefault();
+        alert('Please select a file to upload.');
+        return false;
+    }
+    
+    const allowedTypes = ['.pdf', '.doc', '.docx'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+        e.preventDefault();
+        alert('Please upload only PDF, DOC, or DOCX files.');
+        return false;
+    }
+});
+</script>
+{% endblock %}

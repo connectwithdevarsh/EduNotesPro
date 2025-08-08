@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - EduNotesPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">
+                <i class="fas fa-cog me-3"></i>Admin Panel
+            </h1>
+            <p class="text-muted">Manage notes, users, and platform statistics</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="fw-bold">{{ total_users }}</h4>
+                            <p class="mb-0">Total Users</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="fw-bold">{{ approved_notes }}</h4>
+                            <p class="mb-0">Approved Notes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="fw-bold">{{ pending_approval }}</h4>
+                            <p class="mb-0">Pending Approval</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="fw-bold">{{ total_notes }}</h4>
+                            <p class="mb-0">Total Notes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Notes for Approval -->
+    {% if pending_notes %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0 text-dark">
+                <i class="fas fa-exclamation-triangle me-2"></i>Pending Notes ({{ pending_notes|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Subject</th>
+                            <th>Semester</th>
+                            <th>Upload Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in pending_notes %}
+                        <tr>
+                            <td>
+                                <strong>{{ note.title }}</strong>
+                                {% if note.description %}
+                                <br><small class="text-muted">{{ note.description[:80] }}{% if note.description|length > 80 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ note.author.username }}</td>
+                            <td>{{ note.subject.name }}</td>
+                            <td>
+                                <span class="badge bg-secondary">Sem {{ note.semester }}</span>
+                            </td>
+                            <td>
+                                <small>{{ note.upload_date.strftime('%d %b %Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('note_detail', note_id=note.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('approve_note', note_id=note.id) }}" 
+                                       class="btn btn-sm btn-success" title="Approve"
+                                       onclick="return confirm('Are you sure you want to approve this note?')">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{{ url_for('delete_note', note_id=note.id) }}" 
+                                       class="btn btn-sm btn-danger" title="Delete"
+                                       onclick="return confirm('Are you sure you want to delete this note? This action cannot be undone.')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Notes -->
+    <div class="card shadow">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-clock me-2"></i>Recent Notes
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if recent_notes %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Downloads</th>
+                            <th>Upload Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in recent_notes %}
+                        <tr>
+                            <td>
+                                <strong>{{ note.title }}</strong>
+                                {% if note.description %}
+                                <br><small class="text-muted">{{ note.description[:60] }}{% if note.description|length > 60 %}...{% endif %}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ note.author.username }}</td>
+                            <td>{{ note.subject.name }}</td>
+                            <td>
+                                {% if note.is_approved %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Approved
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock me-1"></i>Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ note.download_count }}</span>
+                            </td>
+                            <td>
+                                <small>{{ note.upload_date.strftime('%d %b %Y') }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('note_detail', note_id=note.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if not note.is_approved %}
+                                    <a href="{{ url_for('approve_note', note_id=note.id) }}" 
+                                       class="btn btn-sm btn-success" title="Approve"
+                                       onclick="return confirm('Are you sure you want to approve this note?')">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('delete_note', note_id=note.id) }}" 
+                                       class="btn btn-sm btn-danger" title="Delete"
+                                       onclick="return confirm('Are you sure you want to delete this note? This action cannot be undone.')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-file-alt text-muted display-4 mb-3"></i>
+                <h6 class="text-muted">No notes available</h6>
+                <p class="text-muted">Notes uploaded by users will appear here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

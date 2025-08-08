@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}{{ note.title }} - EduNotesPro{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{{ url_for('view_notes') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Notes
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Note Details -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h1 class="h3 mb-0">{{ note.title }}</h1>
+                </div>
+                <div class="card-body">
+                    <!-- Note Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>Subject:</strong> {{ note.subject.name }} ({{ note.subject.code }})</p>
+                            <p><strong>Semester:</strong> {{ note.semester }}</p>
+                            <p><strong>Uploaded by:</strong> {{ note.author.username }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Upload Date:</strong> {{ note.upload_date.strftime('%d %B %Y') }}</p>
+                            <p><strong>Downloads:</strong> {{ note.download_count }}</p>
+                            <p><strong>File Size:</strong> {{ (note.file_size / 1024 / 1024) | round(2) }} MB</p>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    {% if note.description %}
+                    <div class="mb-4">
+                        <h5>Description</h5>
+                        <p class="text-muted">{{ note.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Download Button -->
+                    {% if session.user_id %}
+                    <div class="mb-4">
+                        <a href="{{ url_for('download_note', note_id=note.id) }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-download me-2"></i>Download Note
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Please <a href="{{ url_for('login') }}" class="alert-link">login</a> to download this note.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Rating Section -->
+            {% if session.user_id %}
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Rate This Note
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="ratingForm">
+                        <input type="hidden" name="note_id" value="{{ note.id }}">
+                        <div class="mb-3">
+                            <label class="form-label">Your Rating:</label>
+                            <div class="rating-stars">
+                                {% for i in range(1, 6) %}
+                                <i class="fas fa-star star-rating" data-rating="{{ i }}" 
+                                   style="cursor: pointer; color: {% if user_rating and i <= user_rating.score %}gold{% else %}#ccc{% endif %};">
+                                </i>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" id="selectedRating" name="score" value="{{ user_rating.score if user_rating else '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-star me-2"></i>Submit Rating
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Comments Section -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Comments ({{ comments|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Add Comment Form -->
+                    {% if session.user_id %}
+                    <form method="POST" action="{{ url_for('add_comment') }}" class="mb-4">
+                        <input type="hidden" name="note_id" value="{{ note.id }}">
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Add a comment:</label>
+                            <textarea class="form-control" id="content" name="content" rows="3" 
+                                      placeholder="Share your thoughts about this note..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-comment me-2"></i>Post Comment
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Please <a href="{{ url_for('login') }}" class="alert-link">login</a> to leave a comment.
+                    </div>
+                    {% endif %}
+
+                    <!-- Comments List -->
+                    {% if comments %}
+                    <div class="comments-list">
+                        {% for comment in comments %}
+                        <div class="comment mb-3 p-3 bg-light rounded">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <strong>{{ comment.user.username }}</strong>
+                                <small class="text-muted">{{ comment.created_at.strftime('%d %b %Y at %I:%M %p') }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash text-muted display-4 mb-3"></i>
+                        <h6 class="text-muted">No comments yet</h6>
+                        <p class="text-muted">Be the first to share your thoughts about this note!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Note Statistics -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Statistics
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Downloads:</span>
+                        <strong>{{ note.download_count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Average Rating:</span>
+                        <div>
+                            {% set avg_rating = note.average_rating() %}
+                            {% for i in range(1, 6) %}
+                                {% if i <= avg_rating %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-muted"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <small class="text-muted">({{ note.ratings|length }} ratings)</small>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Comments:</span>
+                        <strong>{{ comments|length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>File Type:</span>
+                        <strong>{{ note.original_filename.split('.')[-1].upper() }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Info -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file me-2"></i>File Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Original Name:</strong><br>{{ note.original_filename }}</p>
+                    <p><strong>Size:</strong> {{ (note.file_size / 1024 / 1024) | round(2) }} MB</p>
+                    <p><strong>Uploaded:</strong><br>{{ note.upload_date.strftime('%d %B %Y') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Star Rating System
+document.querySelectorAll('.star-rating').forEach(star => {
+    star.addEventListener('click', function() {
+        const rating = parseInt(this.dataset.rating);
+        document.getElementById('selectedRating').value = rating;
+        
+        // Update star colors
+        document.querySelectorAll('.star-rating').forEach((s, index) => {
+            if (index < rating) {
+                s.style.color = 'gold';
+            } else {
+                s.style.color = '#ccc';
+            }
+        });
+    });
+    
+    star.addEventListener('mouseover', function() {
+        const rating = parseInt(this.dataset.rating);
+        document.querySelectorAll('.star-rating').forEach((s, index) => {
+            if (index < rating) {
+                s.style.color = 'gold';
+            } else {
+                s.style.color = '#ccc';
+            }
+        });
+    });
+});
+
+// Rating Form Submission
+document.getElementById('ratingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{{ url_for("rate_note") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload(); // Refresh to show updated rating
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while submitting your rating.');
+    });
+});
+</script>
+{% endblock %}
